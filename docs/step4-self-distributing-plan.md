@@ -8,23 +8,31 @@ Per the source doc's roadmap table, Step 4 ("self-distributing") is the last sta
 
 ## Design principle: orchestrate domain experts, don't reimplement them
 
-Stated explicitly by the user and load-bearing for the whole design: **day2 does not need to be the expert in SEO, ad creative, UGC video, social scheduling, or website building.** For each distribution/marketing *domain*, day2's job is to (1) recognize the domain matters for this app's current stage/strategy, (2) find real, state-of-the-art tools already built for that domain, (3) let the owner (or a review step) confirm a binding, and (4) orchestrate that tool via MCP inside day2's own budget/safety-rail/transparency machinery — never re-inventing what a dedicated tool already does well. This is why `growth-tools-config.ts` (Component 4) is a first-class component, not plumbing: it's the seam where "day2's own judgment" (strategy, budget, safety, sequencing, honesty) meets "a domain expert's judgment" (how to actually write ad copy, generate UGC video, or run SEO). Concretely this means two things: a config-driven, swappable binding per domain (already designed below), **and** a real, repeatable research mechanism for *finding* those tools in the first place — domains and their best-fit tools are expected to change over time, not be hardcoded once at ship time (Component 4's `researchToolCandidates`).
+Stated explicitly by the user and load-bearing for the whole design: **day2 does not need to be the expert in SEO, ad creative, UGC video, social scheduling, or website building.** For each distribution/marketing *domain*, day2's job is to (1) recognize the domain matters for this app's current stage/strategy, (2) find real, state-of-the-art tools already built for that domain, (3) operate that binding itself, and (4) orchestrate it via MCP inside day2's own budget/safety-rail/transparency machinery — never re-inventing what a dedicated tool already does well.
+
+**Corrected mid-planning, load-bearing:** the app owner does not source, configure, or pay for these tools themselves, and never touches an MCP server config or API key. **Day2 itself already provides these MCPs** — the tool integrations (Foreplay, tryholo.ai, Arcads.ai, Semrush, raylight/autoAE/hyperframes, PostEveryWhere-style social operation, Juno, Framer, ad-platform access) are day2's own platform infrastructure, operated once and reused across every app day2 powers, not something an individual app owner brings, subscribes to, or wires up per-app. This is a direct consequence of the standing design goal ("the user don't need to care about their app after launch... they configure a monthly budget and day2 makes the rest") applied one level deeper: the owner's only inputs anywhere in this system remain **budget, KPI goals, and the optional website opt-in** — never a vendor account, an API key, or an MCP connection string. See Component 4 below for exactly what this changes (config location, who runs `researchToolCandidates`, and what "connected" means for the handful of domains that still need a real, app-specific identity resource).
+
+This is why `growth-tools-config.ts` (Component 4) is a first-class component, not plumbing: it's the seam where "day2's own judgment" (strategy, budget, safety, sequencing, honesty) meets "a domain expert's judgment" (how to actually write ad copy, generate UGC video, or run SEO) — and now also the seam between "day2 the platform operator" and "day2 acting on behalf of one specific app," since the platform holds the tool relationships and each app only draws on them through its own budget. Concretely this means two things: a config-driven, swappable, **platform-operated** binding per domain (designed below), **and** a real, repeatable research mechanism for *finding* those tools in the first place, run by day2's own maintainers — domains and their best-fit tools are expected to change over time, not be hardcoded once at ship time (Component 4's `researchToolCandidates`).
 
 **Domains identified so far, and the real, illustrative tools that fit them** (illustrative only — swappable via config, never hardcoded into agent logic; a domain can have more than one bound tool, see "mixing" below):
 
-| Domain (`GrowthCapability`) | What day2 needs from it | Illustrative real tool(s) | Verified how |
-|---|---|---|---|
-| `creative_generation` | Text/image/social/ad assets, grounded in real brand voice | higgsfield, KiveAI (social-media asset generation); **tryholo.ai** | Live-researched: tryholo.ai's own "Brand DNA" mechanism (extracts tone/colors/audience from the app's real website) independently validates this plan's own Component 5 grounding design (a) — same idea, already a real product |
-| `motion_video_generation` | Motion-graphics-style product/demo video | raylight, autoAE, hyperframes | User-supplied, illustrative |
-| `ugc_video_generation` | AI-presented, testimonial-style video | **Arcads.ai** | User-supplied, illustrative |
-| `social_trend_research` | What's trending on TikTok/Instagram right now | none required — `WebSearch`/`WebFetch` only, same as `competitor-feed.ts`'s existing pattern; an MCP is an optional upgrade | N/A — deliberately zero-dependency by default |
-| `competitor_research` (ad-angle intelligence) | Real competitor ad creative/angles, not just feature lists | **Foreplay.co** | Live-researched: real product — "Spyder" competitor ad tracking across Meta/TikTok with real-time alerts, swipe files, briefing tools; explicitly does *not* generate or launch ads itself, which is exactly the research-only role this domain needs |
-| `social_account_operation` | Post/schedule to an already-connected account | PostEveryWhere MCP, PostMCP AI | User-supplied, illustrative |
-| `ad_platform` | Launch/manage paid campaigns on a real ad platform | (unnamed — a Meta/Google/TikTok Ads-shaped MCP) | Not yet researched |
-| `seo_content` | Keyword research, on-page SEO, site audit | Semrush (or similar) | Well-established category leader; illustrative |
-| `website_generation` | Owner-opt-in marketing site, template-based | Framer | User-supplied, illustrative |
-| `app_store_release` | N/A today (expense-buddy has no native shell) | fastlane | User-supplied, illustrative — dormant until a native wrapper exists |
-| *(cross-cutting)* | Autonomous GTM "coworker": browser automation, hosted-site publishing, own schedule/mailbox | **Juno AI (getjuno.com)** | Live-researched: real product, genuinely spans several domains at once (see below) rather than fitting one row |
+| Domain (`GrowthCapability`) | What day2 needs from it | Illustrative real tool(s) | Verified how | Who provisions the connection |
+|---|---|---|---|---|
+| `creative_generation` | Text/image/social/ad assets, grounded in real brand voice | higgsfield, KiveAI (social-media asset generation); **tryholo.ai** | Live-researched: tryholo.ai's own "Brand DNA" mechanism (extracts tone/colors/audience from the app's real website) independently validates this plan's own Component 5 grounding design (a) — same idea, already a real product | **Day2 platform** — pure tool access, no per-app identity needed |
+| `motion_video_generation` | Motion-graphics-style product/demo video | raylight, autoAE, hyperframes | User-supplied, illustrative | **Day2 platform** |
+| `ugc_video_generation` | AI-presented, testimonial-style video | **Arcads.ai** | User-supplied, illustrative | **Day2 platform** |
+| `social_trend_research` | What's trending on TikTok/Instagram right now | none required — `WebSearch`/`WebFetch` only, same as `competitor-feed.ts`'s existing pattern; an MCP is an optional upgrade | N/A — deliberately zero-dependency by default | **Day2 platform** (or nothing at all — WebSearch needs no account) |
+| `competitor_research` (ad-angle intelligence) | Real competitor ad creative/angles, not just feature lists | **Foreplay.co** | Live-researched: real product — "Spyder" competitor ad tracking across Meta/TikTok with real-time alerts, swipe files, briefing tools; explicitly does *not* generate or launch ads itself, which is exactly the research-only role this domain needs | **Day2 platform** |
+| `social_account_operation` | Post/schedule to an already-connected account | PostEveryWhere MCP, PostMCP AI | User-supplied, illustrative | **Day2 platform provisions the tool; the underlying social account is still a real, app-specific identity resource** — see note below the table |
+| `ad_platform` | Launch/manage paid campaigns on a real ad platform | (unnamed — a Meta/Google/TikTok Ads-shaped MCP) | Not yet researched | **Day2 platform provisions the tool; the underlying ad account is still a real, app-specific identity resource** — see note below the table |
+| `seo_content` | Keyword research, on-page SEO, site audit | Semrush (or similar) | Well-established category leader; illustrative | **Day2 platform** |
+| `website_generation` | Owner-opt-in marketing site, template-based | Framer | User-supplied, illustrative | **Day2 platform provisions the tool; the site/domain itself is app-specific** — see note below the table |
+| `app_store_release` | N/A today (expense-buddy has no native shell) | fastlane | User-supplied, illustrative — dormant until a native wrapper exists | **Day2 platform** (dormant) |
+| *(cross-cutting)* | Autonomous GTM "coworker": browser automation, hosted-site publishing, own schedule/mailbox | **Juno AI (getjuno.com)** | Live-researched: real product, genuinely spans several domains at once (see below) rather than fitting one row | **Day2 platform** |
+
+**"Day2 platform" means:** the credentials, MCP server connections, and vendor subscriptions for every row above live in day2's own operator-level configuration (Component 4, below) — never in the app owner's repo, never something the owner signs up for or pastes an API key into. The owner's only inputs anywhere in this entire system are budget, KPI goals, and the optional website opt-in.
+
+**The three rows flagged "still a real, app-specific identity resource" are a genuinely different problem, not a loophole in the rule above.** Day2 can hold one platform-level Foreplay/tryholo.ai/Arcads.ai/Semrush subscription and use it for every app it powers, because those tools don't need to *know* which brand they're serving beyond the prompt/context day2 gives them per call. Posting to a real Instagram/TikTok account, spending from a real ad account, or hosting a real website all require a real, specific, identity-bearing endpoint *for this one app* to exist before day2 can operate it — that endpoint can't be conjured by code alone. The realistic path, matching how marketing agencies already operate multiple clients' accounts today, is day2 holding its own **agency/multi-tenant-style relationship** with each of these platforms (Meta Business Manager's agency access, an ad platform's official multi-client API product, a hosting provider's reseller/team-account model) and provisioning a dedicated resource per app under that umbrella — still zero owner involvement, but a real business/API relationship day2 itself has to hold, not just a code change. Flagged honestly in Open Questions rather than assumed solved.
 
 **Juno AI is architecturally different from every other tool above and needs its own note.** Verified live (docs.getjuno.com / getjuno.com): Juno is an "AI coworker" that connects to a team's existing tools, uses its own browser to log in and automate work, manages its own filesystem, writes code, publishes hosted sites, and — critically — **manages its own work schedule and has its own mailbox**, i.e. it's built to act autonomously and asynchronously, not just respond to a single call. Two consequences for this design:
 
@@ -39,7 +47,7 @@ Stated explicitly by the user and load-bearing for the whole design: **day2 does
 // e.g. both higgsfield AND tryholo.ai bound for creative_generation — and execution
 // picks (or, over time, the allocator's own arms — see below — reinforces) whichever
 // fits a given arm best, rather than being locked to one vendor per domain.
-export function resolveBindings(config: GrowthToolsConfig, capability: GrowthCapability): ToolBinding[];
+export function resolveBindings(config: GrowthToolsConfig, capability: GrowthCapability, appId: string): ToolBinding[];  // appId matters for identity-bearing capabilities — see Component 4's platform-registry note; today there's exactly one app (expense-buddy), so this is a constant, not real multi-tenancy yet
 
 // Picks the best-fit binding among the resolved set for a specific arm/strategy context
 // — e.g. prefer a brand-DNA tool like tryholo.ai for on-brand static/carousel ads, prefer
@@ -65,9 +73,10 @@ export type ToolCandidateInsight = {
 
 // Same simplest-agent pattern as competitor-feed.ts's researchCompetitorFeatures —
 // WebSearch/WebFetch only, no sandbox/Bash/filesystem. Produces real, cited candidates
-// for a human (today) — and potentially the owner directly, later — to review before a
-// ToolBinding is ever actually configured. This is the mechanism that keeps the table
-// above from going stale: rerun per domain whenever "state of the art" is worth
+// for a day2 platform operator/maintainer to review before a ToolBinding is ever actually
+// configured — never owner-facing, since the owner never sees or manages individual tool
+// bindings at all (see the platform-operated note above). This is the mechanism that keeps
+// the table above from going stale: rerun per domain whenever "state of the art" is worth
 // rechecking, not just once at ship time.
 export function researchToolCandidates(domain: GrowthCapability): Promise<ToolCandidateInsight[]>;
 ```
@@ -110,7 +119,7 @@ Hardcoded, not configurable — mirrors `autonomy.ts`'s own `SENSITIVE_PATH_PATT
 2. **Per-action spend cap**: no single action may exceed the lesser of $50 or 20% of remaining monthly budget.
 3. **Kill switch**: config flag, checked first in `evaluateSpend`, unconditionally, before any other math.
 4. **Independent truthful-claims check on every creative**, run by a second agent that never also wrote it.
-5. **Account/website/tool-connection creation is always a manual, one-time owner action — never automated, regardless of budget.** Agents may only *operate* what's already connected.
+5. **Tool/MCP connections (credentials, subscriptions) are day2-platform infrastructure, never owner-supplied — but the real, app-specific identity resources a handful of domains still require (a social account, an ad account, a website/domain) are always established as a manual, one-time day2-operator action, never automated, regardless of budget.** Agents may only *operate* what's already connected; neither an agent nor the budget can create the underlying identity resource itself.
 6. **An independent "does this read as generic AI content" check runs on every creative.** Not a hard block by default; surfaced in the transparency feed; blocks after repeated consecutive flags for the same segment/channel.
 7. **Exploration spend ceiling**: no more than 30% of a channel's monthly budget may go to under-observed arms at once.
 8. **UGC-style content may adopt an authentic aesthetic but may never fabricate a specific real person's identity or a genuine-unsolicited-testimonial claim.**
@@ -208,7 +217,7 @@ export type AllocatorState = { arms: ArmStats[]; updatedAt: string };
 
 // Only proposes arms whose required capability actually resolves via Component 4's config
 // (never propose something nothing can execute).
-export function buildCandidateArms(channel: SpendCategory, toolsConfig: GrowthToolsConfig): Arm[];
+export function buildCandidateArms(channel: SpendCategory, toolsConfig: GrowthToolsConfig, appId: string): Arm[];
 
 // Beta-Bernoulli Thompson sampling: each arm's success rate is a Beta(1+successes, 1+failures)
 // posterior; selection draws one sample per candidate arm, picks the max. Untried arms have wide
@@ -237,7 +246,7 @@ export function renderAllocatorSummary(state: AllocatorState): string;
 
 ## Component 4: Config-driven MCP/tool-selection layer
 
-New file `orchestrator/src/growth-tools-config.ts` — the domain-orchestration seam described above.
+New file `orchestrator/src/growth-tools-config.ts` — the domain-orchestration seam described above. **Platform-level, not per-app**: this is the one piece of Step 4 config that does *not* live in the governed app's own repo, and is not read via the `--repo <path>` targeting every other per-app config (`.day2-autonomy.json`, `.day2-budget.json`) uses. Reflects the corrected design above — the app owner never sees, edits, or authors a `ToolBinding`.
 
 ```ts
 export type GrowthCapability =
@@ -247,26 +256,30 @@ export type GrowthCapability =
 
 export type ToolBinding = {
   capability: GrowthCapability;
-  mcpServerName: string;                // e.g. "higgsfield"/"kiveai"/"tryholo" (creative), "raylight" (motion video), "arcads" (UGC), "foreplay" (competitor ad research), "semrush" (SEO), "posteverywhere" (social ops), "fastlane" (app-store), "framer" (website), "juno" (cross-cutting — see multi-capability note) — illustrative, swappable, never hardcoded into agent logic
-  serverConfig: McpServerConfig;        // SDK's own union type — stdio/SSE/HTTP/in-process
+  mcpServerName: string;                // e.g. "higgsfield"/"kiveai"/"tryholo" (creative), "raylight" (motion video), "arcads" (UGC), "foreplay" (competitor ad research), "semrush" (SEO), "posteverywhere" (social ops), "fastlane" (app-store), "framer" (website), "juno" (cross-cutting — see multi-capability note) — illustrative, swappable, never hardcoded into agent logic. Held and paid for by day2 as the platform operator, not the app owner
+  serverConfig: McpServerConfig;        // SDK's own union type — stdio/SSE/HTTP/in-process; real credentials, day2-operator-owned
   allowedTools: string[];
   toolPolicy?: McpServerToolPolicy[];   // default: always_ask for anything spending money, publishing, or operating an account
   enabled: boolean;
-  connectedAccountRef?: string;         // social_account_operation/website_generation — points at an owner-connected account/project; fails closed unset (safety rail 5)
+  connectedAccountRef?: string;         // social_account_operation/ad_platform/website_generation only — points at the real, app-specific identity resource (a social account, ad account, or site/domain) day2 has provisioned for THIS app under its own agency/multi-tenant relationship with that platform; fails closed unset (safety rail 5). Never owner-supplied — see the table note above
 };
 
-export type GrowthToolsConfig = { bindings: ToolBinding[] };
+export type GrowthToolsConfig = { bindings: ToolBinding[] };  // one registry, shared across every app day2 powers today just expense-buddy, designed to scale to more without a shape change
 
+// Reads from day2's own platform-level location (e.g. orchestrator/.day2-platform-tools.json,
+// gitignored — real credentials live here, a checked-in .example documents the shape), NOT
+// from the governed app's repo and NOT passed a --repo flag. A given app's identity is supplied
+// separately, only for resolving which connectedAccountRef applies (see resolveBindings below).
 export function loadGrowthToolsConfig(path: string): GrowthToolsConfig;
-export function resolveBindings(config: GrowthToolsConfig, capability: GrowthCapability): ToolBinding[];  // plural — every enabled, connected binding
+export function resolveBindings(config: GrowthToolsConfig, capability: GrowthCapability, appId: string): ToolBinding[];  // plural — every enabled binding usable for this specific app (identity-bearing bindings additionally require a connectedAccountRef provisioned for this appId)
 export function selectBestFitBinding(bindings: ToolBinding[], context: { arm: Arm; strategy: GrowthStrategy }): ToolBinding | undefined;
 export function buildMcpServersOption(config: GrowthToolsConfig, capabilities: GrowthCapability[]): Record<string, McpServerConfig>;
-export function researchToolCandidates(domain: GrowthCapability): Promise<ToolCandidateInsight[]>;  // see domain-discovery mechanism above
+export function researchToolCandidates(domain: GrowthCapability): Promise<ToolCandidateInsight[]>;  // day2-operator-run, see domain-discovery mechanism above
 ```
 
-Stored at `.day2-growth-tools.json` in expense-buddy. **Ships with `bindings: []` by default.** An unresolved capability fails closed to "no tool available." `social_account_operation`/`website_generation` fail closed whenever `connectedAccountRef` is unset even if `enabled: true`.
+Platform registry at `orchestrator/.day2-platform-tools.json` (new addition to `orchestrator/.gitignore` — real vendor credentials never get committed; a `.day2-platform-tools.example.json` documents the shape with placeholder values). **Ships with `bindings: []` by default** — matches `ACTIVE_EXPERIMENTS: []`'s "real infra, zero real behavior change" precedent. An unresolved capability fails closed to "no tool available." `social_account_operation`/`ad_platform`/`website_generation` additionally fail closed for a given app whenever that app has no provisioned `connectedAccountRef`, even if the binding itself is `enabled: true` platform-wide — day2 having a Foreplay subscription doesn't mean every app automatically has a live Instagram account to post through.
 
-**Live-validation:** config round-trips; `resolveBindings` returns `[]` against the empty default; `selectBestFitBinding` picks correctly among ≥2 synthetic bindings for the same capability by matching arm context; an operation-style binding with `enabled: true` but no `connectedAccountRef` still resolves unavailable; `researchToolCandidates` run for real against one domain (e.g. `competitor_research`) and cross-checked against Foreplay's real, verified feature set above.
+**Live-validation:** config round-trips; `resolveBindings` returns `[]` against the empty default; `selectBestFitBinding` picks correctly among ≥2 synthetic bindings for the same capability by matching arm context; an identity-bearing binding (`social_account_operation`/`ad_platform`/`website_generation`) with `enabled: true` platform-wide but no `connectedAccountRef` for expense-buddy's `appId` still resolves unavailable for expense-buddy specifically, proving the per-app fail-closed check works independently of the platform-wide `enabled` flag; `researchToolCandidates` run for real against one domain (e.g. `competitor_research`) and cross-checked against Foreplay's real, verified feature set above.
 
 ## Component 5: Creative generation — text, image, motion video, UGC video
 
@@ -441,9 +454,11 @@ Grounded the same way as Component 5. Resolves via Component 4's `website_genera
 5. **`agent-sandbox.ts`'s env-inheritance gap gets materially worse here** — real MCP/ad-platform/social/hosting credentials are coming; every new credential name must hit `DENIED_ENV_VARS` before it's ever set in the parent env.
 6. **Idempotency on crash-and-retry** — `SpendRequest.id` replay covers exact retries, not mid-flight state.
 7. **KPI goals are a transparency passthrough in v1**, not yet reweighting macro allocation.
-8. **Account-connection UX is unspecified** — a manually-edited config field is sufficient for this pass.
+8. **Day2-operator connection UX is unspecified** — a manually-edited platform config field (`orchestrator/.day2-platform-tools.json`) is sufficient for this pass; never owner-facing (see the correction above), but how a day2 operator actually connects a new identity resource is not designed further than that.
 9. **Platform AI-content-disclosure requirements for UGC-style creative** are real, policy-dependent, and not hardcoded here.
 10. **Multi-tool "mixing" (`selectBestFitBinding`) ships as a simple, disclosed rule in v1**, not itself learned — the natural extension (arm-level `toolHint` reinforcement) is named above and deliberately deferred.
+11. **Whether day2 can actually obtain agency/multi-tenant-style access to identity-bearing platforms (social, ads, hosting) is a real business/API relationship, not something this codebase can create.** The design assumes it (see the tool table's provisioning note) since it's the only path consistent with "the owner never brings their own MCP," but whether Meta/TikTok/a given ad platform/a given hosting provider actually grants day2 that kind of multi-client access — and under what terms — is unresolved and outside this plan's scope to answer.
+12. **`GrowthToolsConfig` is designed with an `appId` parameter for forward-compatibility, but day2 powers exactly one app today (expense-buddy).** True multi-tenancy (one day2 instance serving many apps, pooling the same tool subscriptions with per-app budget/spend metering) is a natural extension, not built or tested here.
 
 ## Implementation checklist (concrete, ordered — for whoever picks up each piece)
 
@@ -468,9 +483,10 @@ Each box is independently shippable per the sequencing above; check `COORDINATIO
 - [ ] Live-validate: synthetic rigged environment, confirm reinforcement + non-collapsing exploration
 
 **Component 4 — Tool-selection layer**
-- [ ] `orchestrator/src/growth-tools-config.ts`: `GrowthCapability`/`ToolBinding`, `loadGrowthToolsConfig`, `resolveBindings`, `selectBestFitBinding`, `buildMcpServersOption`, `researchToolCandidates`
-- [ ] `orchestrator/src/growth-tools-config.test.ts`: round-trip, empty-default fail-closed, multi-binding selection, unconnected-account fail-closed
-- [ ] Live-validate: run `researchToolCandidates("competitor_research")` for real, cross-check against Foreplay's verified feature set above
+- [ ] Add `orchestrator/.day2-platform-tools.json` to `orchestrator/.gitignore`; check in `orchestrator/.day2-platform-tools.example.json` documenting the shape with placeholder values only
+- [ ] `orchestrator/src/growth-tools-config.ts`: `GrowthCapability`/`ToolBinding`, `loadGrowthToolsConfig`, `resolveBindings`, `selectBestFitBinding`, `buildMcpServersOption`, `researchToolCandidates` — reads the platform-level file, never a `--repo`-scoped app config
+- [ ] `orchestrator/src/growth-tools-config.test.ts`: round-trip, empty-default fail-closed, multi-binding selection, per-app unconnected-identity-resource fail-closed (independent of the platform-wide `enabled` flag)
+- [ ] Live-validate: run `researchToolCandidates("competitor_research")` for real, cross-check against Foreplay's verified feature set above; confirm no real vendor credential ever needs to exist in `expense-buddy/`'s repo for any test to pass
 
 **Component 5 — Creative generation**
 - [ ] `orchestrator/src/ai-slop-patterns.ts` + `.test.ts`
