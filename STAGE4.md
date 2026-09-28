@@ -37,3 +37,9 @@ Corrected, same doc, same session, disclosed here rather than silently edited:
 - `resolveBindings`/`buildCandidateArms` gained an `appId` parameter so the per-app identity-resource check is enforced independently of the platform-wide `enabled` flag — day2 having a Foreplay subscription doesn't imply every app has a live ad account. Only one real `appId` exists today (expense-buddy); true multi-tenancy is named as a deliberate non-goal for this pass (Open Question #12).
 
 Full detail in the doc itself — this entry is the pointer, not a duplicate.
+
+### 2026-09-28 — Component 1 (budget/spend governance) built, W38, Session A-Swarm
+
+Full detail: `COORDINATION.md` W38. `spend-governance.ts`'s `evaluateSpend`/`recordSpend`/`loadSpendLedger`/`renderBudgetSummary`, plus `growth-config.ts`/`spend-config-cli.ts` for the owner's `.day2-budget.json`. 33 new tests including the source spec's own required property-based fuzz bar (`sum(allowed) <= monthlyBudgetUsd`, zero breaches over 200 random scenarios). A real bug — idempotent replay double-counting spend via a duplicate ledger write — was caught by the fuzz suite itself during development and fixed before landing, not found later. Live-validated against a real ledger file and a real temp-repo `.day2-budget.json`, not just unit tests. Committed `de3cd1f`, pushed to `main`.
+
+**Real collision, disclosed in full in `COORDINATION.md` W38**: another session independently built the same component in parallel (`worktrees/orchestrator-step4-component1-spend-governance`, uncommitted, 781 lines), discovered only when cleaning up this session's own worktree. Neither session had claimed Component 1 first. Not resolved unilaterally — that worktree and its files were left untouched; the disclosure names exactly what's on `main` now so whoever owns it can decide how to reconcile.
