@@ -1028,3 +1028,35 @@ table — not new findings, just restated with current verification:**
 **Not re-litigated here, still true:** the Stage 0 retention-lift gate noted
 above as "overridden, not resolved" — nothing in W28-W56 ran that test
 either; every later stage still sits on the same disclosed override.
+
+## Decision (2026-10-03): L4/L5 autonomy and auth/multi-tenancy, documented not built
+
+Following the reconciliation pass above, the user was asked to make two calls
+this project's own audit (`docs/platform-audit-findings.md`) flagged as
+product-direction decisions rather than bugs. Both decided the same way:
+**document current reality honestly, don't build new behavior speculatively.**
+
+- **L4/L5 autonomy stays a documented target, not a built feature.**
+  `autonomy.ts::evaluateAutonomy` only checks one threshold (`< L3`); L3/L4/L5
+  are behaviorally identical. Nothing today would exercise L4's "product-wide
+  experiments" (Step 3 has zero active experiments) or L5's "promotes new
+  features" (Step 4 has never executed a real external action), so building
+  distinct behavior for them now would be speculative. Documented in
+  `orchestrator/src/types.ts` (on `AutonomyLevel`) and `autonomy.ts` (on
+  `LEVEL_ORDER`) rather than silently left to be rediscovered by the next
+  session or audit.
+- **Auth/multi-tenancy deferred until a second real app or operator exists.**
+  Neither exists yet, so a login/session/tenant model would also be
+  speculative. Documented in `api-server.ts`'s file header as a deliberate
+  decision with a concrete trigger condition (second app, second person, or
+  binding to anything but localhost), not an open question. **One concrete
+  fix made alongside the documentation, not deferred**: the CORS header was
+  `access-control-allow-origin: "*"` on a server whose own comment justified
+  no-auth specifically because it's localhost-only — a wildcard origin
+  contradicts that justification (it lets any webpage open in the operator's
+  browser read responses from it, not just the real console). Scoped to the
+  console's real origin (`DAY2_CONSOLE_ORIGIN`, defaulting to
+  `http://localhost:3000`) instead. Verified live: `curl -i -X OPTIONS` shows
+  the header now pins to the console's origin; a full browser load of the
+  console's Apps page against the running API server still works with zero
+  console errors.
