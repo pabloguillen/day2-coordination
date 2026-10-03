@@ -1018,8 +1018,16 @@ table — not new findings, just restated with current verification:**
   `autonomy.ts::evaluateAutonomy` only ever checks one threshold (`< L3`) —
   L3/L4/L5 are behaviorally identical in the actual code.
 - `docs/closed-loop-spec.md`'s self-flagged conflict #4 (the `experiments.ts`
-  frequentist/Bayesian framework overlap) is still open — W47 through W56
-  didn't touch it, and no later entry closes it.
+  frequentist/Bayesian framework overlap) has a real fix written
+  (`evaluateProportionExperiment` in `experiments.ts`, called from
+  `entry-paths.ts`) — but it's on the `self-healing-hardening` branch, not
+  `main`. **Correction (2026-10-03, independent audit):** this line
+  previously said "still open" even after a same-day edit to
+  `docs/closed-loop-spec.md` itself declared it "RESOLVED" — the two docs
+  disagreed with each other, and neither was quite right about `main`.
+  Accurate as of now: fix implemented, pending review in [orchestrator
+  PR #6](https://github.com/pabloguillen/day2-orchestrator/pull/6), not yet
+  merged. See `docs/implementation-audit-2026-10-03-independent.md`.
 - No auth or multi-tenancy exists anywhere; `api-server.ts` binds to
   localhost with no auth (by design, for now) but sets a wildcard CORS
   header, which is an inconsistency worth fixing before that assumption

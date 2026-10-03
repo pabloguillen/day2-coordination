@@ -1,8 +1,8 @@
-# orchestrator/ is its own real git repository with its own remote
-# (github.com/pabloguillen/day2-orchestrator) — deliberately not nested
-# here as a submodule; this repo versions the coordination layer
-# (COORDINATION.md, STAGE*.md, docs/, scripts/) only.
+# orchestrator/ and console/ are each their own real git repository —
+# deliberately not nested here as submodules; this repo versions the
+# coordination layer (COORDINATION.md, STAGE*.md, docs/, scripts/) only.
 /orchestrator/
+/console/
 
 # Per-session git worktrees (day2/scripts/new-worktree.sh) — ephemeral,
 # created and removed per workstream, never meant to be committed.
@@ -11,3 +11,4 @@
 # Local tool/cache state, not project content.
 /.claude/
 /.wrangler/
+.DS_Store
