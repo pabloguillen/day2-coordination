@@ -310,13 +310,14 @@ lines.
   clutter — `git worktree remove` candidates.
 - **Open PRs, for context on what's "done" vs "shipped":**
 
-  | Repo | PR | Age (as of this audit) | Contents |
-  |---|---|---|---|
-  | orchestrator | #6 | ~1 day | cross-source dedup, trust-feedback loop, rejection memory, the experiments.ts/entry-paths.ts fix described above as already "resolved" in docs |
-  | expense-buddy | #45 | ~1 day | health-scout GH Actions cron schedule, bulkActions density fix |
-  | expense-buddy | #44 | ~2 days | interaction-friction telemetry first rollout |
-  | expense-buddy | #34 | **~6 days** | "Ask a question" UI so `statedPreferences` stops being null — open since 2026-09-27, no mention found in `COORDINATION.md`'s later entries explaining why it's still unreviewed |
-  | expense-buddy | #1 | ~10 days | the original Stage 0 seed-bug fixture — `COORDINATION.md` already explicitly notes this one is intentionally left open as a reference artifact, not a stuck item |
+  | Repo | PR | Age (as of this audit) | Contents | Status |
+  |---|---|---|---|---|
+  | orchestrator | #6 | ~1 day | cross-source dedup, trust-feedback loop, rejection memory, the experiments.ts/entry-paths.ts fix described above as already "resolved" in docs | **Merged 2026-10-04** |
+  | orchestrator | #7 | new | this audit's own two fixes (autonomy misattribution, sandbox denylist) | **Merged 2026-10-04** |
+  | expense-buddy | #45 | ~1 day | health-scout GH Actions cron schedule, bulkActions density fix | **Merged 2026-10-04** |
+  | expense-buddy | #44 | ~2 days | interaction-friction telemetry first rollout | **Merged 2026-10-04** |
+  | expense-buddy | #34 | **~6 days** | "Ask a question" UI so `statedPreferences` stops being null — open since 2026-09-27, no mention found in `COORDINATION.md`'s later entries explaining why it's still unreviewed | **Merged 2026-10-04**, conflict resolved by hand (see Update below) |
+  | expense-buddy | #1 | ~10 days | the original Stage 0 seed-bug fixture — `COORDINATION.md` already explicitly notes this one is intentionally left open as a reference artifact, not a stuck item | Left open, by design |
 
   #34 is the one genuinely unexplained stale item in this list — worth a
   quick human look, if only to decide "still wanted" vs. "close it."
@@ -349,18 +350,47 @@ lines.
 
 ## Priority recommendations
 
-1. Fix `docs/closed-loop-spec.md`'s conflict #4 wording (5 min) and reconcile
-   it with `COORDINATION.md:1020` — pick one accurate statement of the
-   current state of `main`, not two contradictory ones.
-2. Fix the `autonomy.ts` area-misattribution bug (small, well-scoped, add a
-   multi-area test case alongside it).
-3. Add `CLOUDFLARE_API_TOKEN` / `~/.wrangler` to the agent sandbox denylist —
-   same hardening discipline already applied to Sentry/Anthropic, just
-   missed one credential class.
-4. Decide on PR #6 and #45 (merge or explicitly park) — both carry real,
-   tested, disclosed-in-docs-as-done work that isn't actually on `main` yet.
-5. Commit `docs/distribution-intelligence.md`, `docs/offering-logic.md`, and
-   `.DS_Store`'s gitignore exclusion; push the 1 local commit.
-6. Clean up `orchestrator/worktrees-tmp-check/` and the three merged-but-stale
-   worktree directories.
-7. Take a look at expense-buddy PR #34 — oldest unexplained open item.
+1. ~~Fix `docs/closed-loop-spec.md`'s conflict #4 wording~~ — **done**, see
+   `docs/closed-loop-spec.md`'s conflict #5 note and `COORDINATION.md:1020`.
+2. ~~Fix the `autonomy.ts` area-misattribution bug~~ — **done**, orchestrator
+   PR #7 (merged).
+3. ~~Add `CLOUDFLARE_API_TOKEN` / `~/.wrangler` to the agent sandbox
+   denylist~~ — **done**, same PR #7.
+4. ~~Decide on PR #6 and #45~~ — **done, both merged** (2026-10-04), along
+   with expense-buddy #44 and #34 (see Update below).
+5. ~~Commit `docs/distribution-intelligence.md`, `docs/offering-logic.md`,
+   and `.DS_Store`'s gitignore exclusion~~ — **done**, pushed to `origin/main`.
+6. ~~Clean up `orchestrator/worktrees-tmp-check/` and the three
+   merged-but-stale worktree directories~~ — **done**.
+7. ~~Take a look at expense-buddy PR #34~~ — **done, merged** (see Update
+   below).
+
+## Update (2026-10-04): all open PRs from this audit merged
+
+All five items above closed the same day. Orchestrator PR #6 and #7 merged
+cleanly (no file overlap, 1021/1021 tests passing on `main` afterward).
+Expense-buddy #45 and #44 merged cleanly (#44's CI failure was the
+pre-existing composer/density bug #45 fixes — confirmed gone by running the
+correct `bun run test` — i.e. `vitest` — command locally after a trial merge,
+before merging for real; running `bun test` directly on this repo instead
+of `vitest` reproduces a known, already-disclosed 42-failure false alarm,
+see `STAGE4.md:135` — not a real regression, just the wrong runner).
+
+Expense-buddy #34 (the 6-day-stale one) had a real merge conflict in
+`src/lib/day2-events.ts` — its branch predated the M1 closed-loop work that
+expanded `EventType` into the full spec catalog, and both sides had grown
+the same union independently (#34 added `preference_answered`; `main` added
+~20 other types). Resolved by hand: kept `main`'s full catalog, added
+`preference_answered` to it (not a pick-one-side resolution — verified the
+server-side `EVENT_TYPES` allow-list in `server.ts` still carries it
+post-merge too, same "both sides of the client/server catalog must agree"
+trap this spec already warns about elsewhere). CI's visual-diff check then
+failed (homepage height 900px → 1175px, couldn't pixel-diff) — downloaded
+and viewed both screenshots directly rather than overriding the check on
+assumption: confirmed the only difference is the new "One quick question"
+card PR #34 intentionally adds, not a broken layout. 144/144 tests, clean
+build, then merged.
+
+`origin/main` on both repos confirmed green after all five merges: 1021/1021
+(orchestrator), 144/144 (expense-buddy). All now-merged worktrees/branches
+cleaned up (local + remote).

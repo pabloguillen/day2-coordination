@@ -1068,3 +1068,34 @@ product-direction decisions rather than bugs. Both decided the same way:
   the header now pins to the console's origin; a full browser load of the
   console's Apps page against the running API server still works with zero
   console errors.
+
+## 2026-10-04 — second independent audit, all its gaps closed same day
+
+A fresh session ran another independent audit (no reliance on this file or
+`docs/platform-audit-findings.md`'s own claims — re-derived from code/git/
+tests directly), found this file and `docs/closed-loop-spec.md` actively
+disagreeing with each other about conflict #4's status (both now corrected
+above), plus two new bugs: `autonomy.ts`'s `matchedArea` could name the
+wrong area in a multi-area change (audit-trail correctness), and the agent
+sandbox deny-list covered Sentry/Anthropic but not `CLOUDFLARE_API_TOKEN`/
+`~/.wrangler`, which `release.ts`'s real deploys need in the same
+environment. Full findings: `docs/implementation-audit-2026-10-03-independent.md`.
+
+Both fixed and merged same day (`day2-orchestrator` PR #7). Also merged, at
+the user's explicit request, every other PR this audit found sitting open:
+`day2-orchestrator` #6 (cross-source dedup, trust-feedback loop, rejection
+memory, the experiments.ts/entry-paths.ts fix — closing the conflict #4 gap
+above for real, not just in docs), `expense-buddy` #45 (health-scout cron +
+bulkActions fix), #44 (interaction-friction telemetry), and #34 (the
+"Ask a question" UI, open since 2026-09-27 — had a real merge conflict in
+`day2-events.ts`'s `EventType` union against the since-landed M1 catalog,
+resolved by hand; a visual-diff CI failure on it was checked against the
+actual before/after screenshots rather than overridden on assumption,
+confirmed as the PR's own intentional new UI, not a layout break). Stale
+merged worktrees (`orchestrator/worktrees-tmp-check` plus 7 others across
+both repos) removed. `origin/main` on both repos green afterward:
+1021/1021 (`orchestrator`), 144/144 (`expense-buddy`).
+
+Not done, by design: `expense-buddy` PR #1 (the original Stage 0 seed-bug
+fixture) stays open — this file already established it's a reference
+artifact, not backlog.
