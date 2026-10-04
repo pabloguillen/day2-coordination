@@ -1,5 +1,18 @@
 # Step 1 (self-healing) — gap analysis: prototype vs. full scope
 
+**SUPERSEDED (2026-10-04 correction):** this analysis is dated W2 /
+2026-09-25 and reflects the codebase as it existed that day. Three of the
+gaps called out below — "Release pipeline with canary + automatic rollback:
+Not started," "Swarm as regression tester: Not started," and "Governance:
+autonomy levels L0-L5: Not started as an explicit model" — were all built
+shortly afterward (same week, per `COORDINATION.md`'s own later entries:
+W3/W3↔W4 wiring for the first and third, W30 for the second) and are live
+in `orchestrator/src/release.ts`, `orchestrator/src/swarm.ts`, and
+`orchestrator/src/autonomy.ts` respectively. The historical content below
+is left as-written — a snapshot of Step 1's status on 2026-09-25 — and
+should not be mistaken for current status; see `COORDINATION.md` for what's
+actually live today.
+
 Compares what `orchestrator/src/*` actually implements (read in full:
 `types.ts`, `index.ts`, `pipeline.ts`, `agent.ts`, `git.ts`, `pr.ts`,
 `sources/manual.ts`, `sources/sentry.ts`, `README.md`) against Step 1's full

@@ -2,7 +2,21 @@
 
 Status: all 5 milestones (M1-M5) built, tested, and pushed — awaiting human review/merge (COORDINATION.md W47-W51) · Owner: @Pablo · Date: 2026-09-30
 
+> **Correction (2026-10-04):** stale — all of M1-M5 are merged. `day2-orchestrator`
+> PRs #1-#5 merged 2026-10-02; PRs #6 (self-healing/evolving hardening,
+> including the statistical-framework fix in item 5 below) and #7 merged
+> 2026-10-04. Confirmed directly via `gh pr list --repo
+> pabloguillen/day2-orchestrator --state merged`, not just asserted. Nothing
+> in this spec is still "awaiting review" as of this date.
+
 > **Implementation status (2026-09-30):** M1 ([orchestrator PR #1](https://github.com/pabloguillen/day2-orchestrator/pull/1), [expense-buddy PR #41](https://github.com/pabloguillen/expense-buddy/pull/41) — **merged**), M2 ([orchestrator PR #2](https://github.com/pabloguillen/day2-orchestrator/pull/2), stacked on #1), M3 ([orchestrator PR #3](https://github.com/pabloguillen/day2-orchestrator/pull/3), stacked on #2), M4+M5 ([orchestrator PR #4](https://github.com/pabloguillen/day2-orchestrator/pull/4), stacked on #3; [expense-buddy PR #43](https://github.com/pabloguillen/expense-buddy/pull/43), independent). Orchestrator PRs #1-#4 are a sequential stack — merge in order. None force-merged; all await real human review per this project's own "ask before a real production action" discipline. See COORDINATION.md W47-W51 for full per-milestone detail (what was built, real bugs found and fixed by the test suites, live-validation notes).
+>
+> **Correction (2026-10-04):** all of the above are now merged, not pending.
+> Per `gh pr list --repo pabloguillen/day2-orchestrator --state merged`:
+> PR #1 merged 2026-10-02 (already noted above), and PR #2 (M2), PR #3 (M3),
+> and PR #4 (M4+M5) all also merged 2026-10-02. `expense-buddy` PR #43
+> likewise merged. The "stacked on, awaiting review" framing above is
+> historical only.
 
 > **For Claude Code:** module names below come from your own review of `orchestrator/src/` and `expense-buddy/src/`. Verify each against the code before changing it. Where this spec conflicts with `docs/step1-4` or `COORDINATION.md`, this spec wins for the closed-loop work; flag conflicts rather than silently resolving them. Put this file at `docs/closed-loop-spec.md` and add a short pointer to it in the roadmap section of `COORDINATION.md`.
 
@@ -12,6 +26,14 @@ Status: all 5 milestones (M1-M5) built, tested, and pushed — awaiting human re
 > 3. **RESOLVED in M1 (COORDINATION.md W47).** `growth-execution.ts`'s existing `AcquisitionEvent = { creativeId: string; armKey: string; deviceId: string; landedAt: string }` was kept as-is, not replaced. `expense-buddy/src/lib/day2-acquisition.ts`'s new `AcquisitionContext` deliberately reuses the exact field names `armKey`/`creativeId` (not this spec's literal `arm_id`/`creative_id`) so a real `acquisition_landing` event's `acquisition` field maps onto `AcquisitionEvent` with zero translation — `growth-execution.ts::acquisitionEventFromStoredEvent` just picks those two fields plus the event's server-assigned `at` (used for `landedAt`, not the client-supplied `firstSeenAt` — server clock is trustworthy, a client timestamp isn't). `reconcileOutcomes`'s pure core was never touched.
 > 4. **STALE as of M1 — corrected.** This note originally said `acquisition_landing` was never implemented. Between this spec being written and M1 starting, `expense-buddy` PR #40 (W43) merged to `origin/main` for real, adding `EVENT_TYPES` entries for `acquisition_landing`/`referral_shared`/`referral_redeemed` with the old step4-plan shape (`{source, campaign, creativeId, armKey}` as free-form `metadata`). M1 (PR #41) supersedes that shape with this spec's richer `AcquisitionContext` envelope, per this spec's own precedence rule — and it composes cleanly with the old shape's `creativeId`/`armKey` naming by construction (see #3 above), so nothing built against the old shape breaks. Live proof this file drifts under concurrent multi-session work: re-verify against current `origin/main` before trusting any "not implemented yet" claim in this doc.
 > 5. **Fix written, NOT yet on `main` — pending review in [orchestrator PR #6](https://github.com/pabloguillen/day2-orchestrator/pull/6).** `experiments.ts` already implemented a frequentist statistical-significance calculator (`evaluateExperiment`, Welch's-t-test-style, `MIN_SAMPLE_SIZE_PER_ARM = 30`) before M4 landed. M4's `entry-paths.ts::evaluateHoldoutPromotion` needed section 6.2's Bayesian "90% posterior probability" test instead — a t-test answers "is there a difference in a continuous/count outcome," not "how likely is the true retention rate higher," which is what a binary retained/not-retained holdout decision actually asks. The fix, on the `self-healing-hardening` branch: `experiments.ts` also exports `evaluateProportionExperiment` — a real Beta-binomial posterior comparison via Monte Carlo sampling, the Bayesian counterpart to `evaluateExperiment` — and `entry-paths.ts` calls it instead of maintaining its own private copy of the same sampler. The decision, made explicit: **use `evaluateExperiment` (frequentist) for continuous/count outcomes, `evaluateProportionExperiment` (Bayesian) for binary/proportion outcomes** — both live in `experiments.ts`, so "which framework governs this decision" always has one answer, keyed on the outcome's shape, not on which module happened to need it first. **Correction (2026-10-03, independent audit):** an earlier edit here said "RESOLVED," past tense, with no caveat — checked directly against `main` and `evaluateProportionExperiment` doesn't exist there; `entry-paths.ts` on `main` has no relationship to `experiments.ts` at all. The code is real and correct, just not merged yet. Don't trust "RESOLVED" language in this file (or `COORDINATION.md`) over a direct check of `main` — see `docs/implementation-audit-2026-10-03-independent.md` for how this drift happened.
+>
+> **Correction (2026-10-04):** now actually merged and confirmed live on
+> `main` — `orchestrator PR #6` merged 2026-10-04. Direct check:
+> `grep -n evaluateProportionExperiment orchestrator/src/entry-paths.ts`
+> shows `entry-paths.ts` importing and calling it for real (line 9 and line
+> 250, as of this writing). The "RESOLVED" language the 2026-10-03 note
+> above was correcting is, as of today, actually correct — the earlier
+> correction's own caveat ("not merged yet") no longer applies.
 
 ---
 

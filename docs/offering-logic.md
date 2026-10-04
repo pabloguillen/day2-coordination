@@ -20,6 +20,17 @@ structurally impossible to self-host: the growth engine depends on day2
 holding the vendor/ad-platform relationships, and the console is where
 multi-app, multi-tenant, real-money operation actually lives.
 
+**Disambiguation (2026-10-04):** the line above describes the product
+vision this pricing structure is built toward, not the system as it exists
+today. As of this writing: the data model is single-tenant (no `tenantId`
+field anywhere in `orchestrator/src/apps-registry.ts`'s `AppEntry` type),
+there is no auth anywhere in the console (`api-server.ts` binds to
+localhost, no login/session), and no real money moves — `growth-execution.ts`'s
+`performLiveAction` is a permanent, deliberate stub (every execution path
+dead-ends at `simulated_stopped_before_live_action`). Read the rest of this
+document as the target business model, not a present-tense architecture
+claim.
+
 Pricing follows the pattern every AI-agent tool in this space has converged
 on: a flat subscription with a bundled allowance metered in day2's own
 units — scans, verified fixes, releases, creatives — not raw tokens, and
@@ -107,6 +118,17 @@ Pro $249, PostHog's paid platform add-ons $250–750) — not something derived
 from day2's own real unit-cost data, since no real customer usage exists
 yet to calibrate against. Revisit once real Claude-API and vendor-tool cost
 per scan/fix/creative is known.
+
+**Enforcement status (2026-10-04):** the "1 app / 5 apps" app-count caps
+above are partially, not fully, built in code. `orchestrator/src/apps-registry.ts`'s
+`addApp` does accept an `options.maxApps` and will correctly reject an add
+past that cap with a real "upgrade your plan" message — but that parameter
+is opt-in by the function's own design (`undefined` = unlimited), and
+neither real caller today (`api-server.ts`'s two `addApp(...)` call sites)
+passes it. So the mechanism exists, but no plan/billing concept currently
+feeds it — today, every app-add request is effectively unlimited regardless
+of tier. The scans/creatives-per-month allowances have no equivalent
+enforcement mechanism anywhere in the codebase at all.
 
 ## Content-generation strategy: no SaaS middleman
 

@@ -253,3 +253,13 @@ observed, now also fully wired into real decisions via W25) and
 Only `habits` remains genuinely unbuildable — it needs a repeatable
 read-only action (an export) that doesn't exist in the app yet, matching
 the spec's own original note.
+
+---
+
+**2026-10-04 correction:** this file's log stops at W26 (2026-09-27).
+Step 2 work continued after this date, but under different docs —
+`docs/closed-loop-spec.md` (closed-loop M1-M5: `experiments.ts`,
+`entry-paths.ts`, metrics/*) and `COORDINATION.md` (later W-numbered
+entries). Flagged by an independent fresh audit so a future reader
+doesn't mistake this file's abandoned log for Step 2's current status —
+see `docs/implementation-audit-2026-10-04-fresh.md` for the full picture.
